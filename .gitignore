@@ -1,0 +1,78 @@
+# ============================================================
+# AI-Meme-Shorts-Ad-Generator  통합 .gitignore
+# (포폴용 단일 레포 — 대용량·시크릿·빌드 산출물 제외)
+# ============================================================
+
+# --- 시크릿 / 자격증명 (절대 커밋 금지) ---
+.env
+*.env
+!.env.example
+*.pem
+*.key
+*.pickle
+token*.pickle
+**/credentials*.json
+**/client_secret*.json
+**/*oauth2.json
+**/*-oauth2.json
+*.p12
+
+# --- Python 가상환경 ---
+.venv/
+venv/
+env/
+**/.venv/
+
+# --- Python 캐시 ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.vercel/
+npm-debug.log*
+yarn-error.log*
+
+# --- LLM 파인튜닝 산출물 (대용량, 재생성 가능) ---
+**/checkpoint-*/
+**/eeve-persona-results/
+**/final_persona_model/
+*.pt
+*.bin
+*.safetensors
+*.gguf
+*.tar.gz
+
+# --- 데이터/미디어 생성 산출물 (대용량) ---
+**/data/finetuning/
+**/outputs/
+**/generated/
+*.mp4
+*.wav
+*.mp3
+*.png.tmp
+
+# --- DB / 로그 ---
+*.sqlite3
+*.db
+logs/
+*.log
+
+# --- 빌드/배포 잔여물 ---
+dist/
+build/
+*.pyc
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+
+# --- 크롤링 원시 데이터 (대용량, temp 등) ---
+temp/dcinside/

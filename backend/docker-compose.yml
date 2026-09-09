@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: ..  # 상위 폴더를 컨텍스트로 (AI 폴더 포함)
+      dockerfile: backend/Dockerfile
+    container_name: meme-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # 로컬 개발 시 코드 변경 실시간 반영 (프로덕션에서는 제거)
+      - ./app:/app/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - meme-network
+
+networks:
+  meme-network:
+    driver: bridge

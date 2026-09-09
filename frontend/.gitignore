@@ -1,0 +1,23 @@
+# Claude
+.claude
+CLAUDE.md
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.venv/
+__pycache__/
+*.pyc
+
+data/
+
+# Testing
+coverage/
+.jest/
+
+.next/
+.vscode/
+node_modules/

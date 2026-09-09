@@ -1,0 +1,20 @@
+# Claude
+.claude
+CLAUDE.md
+
+# Environment
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Data (raw는 무시, splits는 포함)
+finetune/data/raw/
+finetune/data/curated/
+!finetune/data/splits/
+
+# Outputs (학습 결과물)
+finetune/outputs/
+data/
+
+secrets/

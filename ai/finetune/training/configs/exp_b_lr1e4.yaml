@@ -1,0 +1,31 @@
+# Experiment B: Lower learning rate
+# epochs=3, lr=1e-4, lora_r=32
+
+model_name: "skt/A.X-3.1-Light"
+max_seq_length: 4096
+
+# LoRA
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.1
+use_dora: true
+
+# Training
+batch_size: 2
+grad_accum: 4
+learning_rate: 0.0001
+epochs: 3
+warmup_ratio: 0.1
+weight_decay: 0.01
+
+# NEFTune
+use_neftune: true
+neftune_noise_alpha: 5
+
+# Eval & Save
+eval_steps: 50
+save_steps: 100
+
+# Logging
+use_wandb: true
+wandb_project: "scenario-finetuning"

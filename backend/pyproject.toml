@@ -1,0 +1,76 @@
+[project]
+name = "meme-data"
+version = "0.1.0"
+description = "Meme data collection, processing, and analysis"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # 크롤링
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "aiohttp>=3.9.0",
+    "selenium>=4.15.0",
+    # 데이터 처리
+    "pandas>=2.1.0",
+    "numpy<=2.3.5", # qwen-tts/numba compatibility
+    # API
+    "google-api-python-client>=2.100.0", # YouTube
+    "google-auth-oauthlib>=1.0.0", # YouTube OAuth
+    "google-auth>=2.47.0",
+    "oauth2client>=4.1.3", # YouTube OAuth (legacy)
+    "pytrends>=4.9.0", # Google Trends
+    # 데이터베이스
+    "psycopg2-binary>=2.9.9", # PostgreSQL
+    "sqlalchemy>=2.0.0",
+    "redis>=5.0.0",
+    "chromadb>=0.4.0", # Vector DB
+    # LLM
+    "langchain>=0.1.0",
+    "langchain-anthropic>=0.1.0",
+    "langchain-google-genai>=0.0.6",
+    # 유틸
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "openai>=2.14.0",
+    "langchain-openai>=1.1.6",
+    "langchain-community>=0.4.1",
+    "langgraph>=1.0.5",
+    "psycopg2>=2.9.11",
+    "yt-dlp>=2025.12.8",
+    "youtube-transcript-api>=1.2.3",
+    "python-jose[cryptography]>=3.5.0",
+    "fastapi>=0.128.0",
+    "uvicorn>=0.40.0",
+    "bcrypt>=5.0.0",
+    "email-validator>=2.3.0",
+    "boto3>=1.42.30",
+    "celery>=5.6.2",
+    "python-multipart>=0.0.21",
+    "alembic>=1.13.0",
+    "mutagen>=1.47.0",
+    # AI 모듈
+    "meme-fluencer",
+    # AI 패키지 직접 호출을 위한 의존성
+    "pillow>=10.0.0",
+    "opencv-python>=4.8.0",
+    "librosa>=0.10.0",
+    "elevenlabs>=2.32.0",
+    "anthropic>=0.40.0",
+    "google-genai>=1.0.0",
+    "langgraph-checkpoint-postgres>=2.0.0",
+    "qwen-tts==0.0.5",
+    "torch==2.8.0",
+    "torchaudio==2.8.0",
+    "transformers==4.57.3",
+]
+
+[tool.uv.sources]
+meme-fluencer = { path = "../AI", editable = true }
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "ipykernel>=6.25.0",       # Jupyter
+]

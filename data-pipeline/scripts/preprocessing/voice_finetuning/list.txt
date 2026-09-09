@@ -1,0 +1,9 @@
+sliced/sample_000.wav|my_actor|ko|그걸 왜 저한테 물으세요?
+sliced/sample_001.wav|my_actor|ko|네?
+sliced/sample_002.wav|my_actor|ko|아저씨
+sliced/sample_003.wav|my_actor|ko|지금 제가 경민이 죽인 것처럼 그러시잖아요.
+sliced/sample_004.wav|my_actor|ko|죽는 건 무섭지 않아.
+sliced/sample_005.wav|my_actor|ko|아, 언젠간 이 모든 것들이 다 끝난다는 게 다행이지 않아?
+sliced/sample_006.wav|my_actor|ko|경민이가 그랬어요.
+sliced/sample_007.wav|my_actor|ko|제가 죽여준 거예요.
+sliced/sample_008.wav|my_actor|ko|경민이 걔요. 어차피 죽을 애였다니까요.

@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# 환경 변수
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 테스트
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# 문서
+docs/
+*.md
+README.md
+
+# 스크립트 (배포용 아님)
+scripts/
+
+# 데이터 파일 (워크플로우 제외)
+data/
+!../AI/data/comfyui/workflows/
+
+# 데이터베이스
+*.db
+*.sqlite
+*.sqlite3
+# YouTube 인증 토큰은 Docker에 포함 필요
+# token.pickle
+# token_analytics.pickle
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic (마이그레이션은 서버에서 직접 실행)
+alembic/versions/__pycache__/
