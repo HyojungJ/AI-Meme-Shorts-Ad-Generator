@@ -7,7 +7,12 @@ from content_pipeline.video.utils import build_scene_inputs_from_db
 from content_pipeline.video.config import load_video_config
 from content_pipeline.schema import Scene, ScenarioOutput
 from content_pipeline.video import get_initial_state
-from content_pipeline.video.nodes import generate_video_node, merge_video_node, verify_video_node
+from content_pipeline.video.nodes import (
+    generate_video_node,
+    merge_video_node,
+    verify_video_node,
+    verify_video_opencv_node,
+)
 
 
 def _read_scenes(path: Path, *, allow_missing_prompt: bool) -> list[dict]:
@@ -92,9 +97,21 @@ def run_video_from_scenes(
         state.update(result)
         result = merge_video_node(state)
 
-        # 영상 검증 (Gemini 2.5 Pro)
+        # 영상 검증
         if result.get("status") == "ok":
             state.update(result)
+
+            # OpenCV 1차 검증 (모델 호출 없는 결정적 품질 게이트)
+            try:
+                opencv_result = verify_video_opencv_node(state)
+                result["opencv_passed"] = opencv_result.get("opencv_passed")
+                result["opencv_result"] = opencv_result.get("opencv_result")
+                result["opencv_message"] = opencv_result.get("opencv_message", "")
+                state.update(opencv_result)
+            except Exception:
+                pass  # OpenCV 검증 실패해도 영상 결과는 반환
+
+            # Gemini 2.5 Pro 검증
             try:
                 verify_result = verify_video_node(state)
                 result["verification_score"] = verify_result.get("score")
@@ -129,6 +146,7 @@ def run_video_regeneration_with_verification(
     """
     max_retries = 3
     verification_result = None
+    opencv_result = None
 
     if not script_id and ad_id:
         script_id = load_latest_script_id_by_ad_id(ad_id)
@@ -210,9 +228,20 @@ def run_video_regeneration_with_verification(
                 "retry_count": retry_count,
             }
         
-        # 2. 검증
         state.update(merge_result)
 
+        # 2. OpenCV 1차 검증 (모델 호출 전 결정적 품질 게이트)
+        opencv_result = verify_video_opencv_node(state)
+        if (
+            opencv_result.get("status") == "ok"
+            and not opencv_result.get("opencv_passed", True)
+            and opencv_result.get("decision") == "auto_retry"
+            and retry_count < max_retries
+        ):
+            # 명백히 깨진 산출물 → Gemini 호출 생략하고 바로 재생성
+            continue
+
+        # 3. Gemini 검증
         verification_result = verify_video_node(state)
         
         if verification_result.get("status") == "failed":
@@ -223,7 +252,7 @@ def run_video_regeneration_with_verification(
                 "verification_error": verification_result.get("error"),
             }
         
-        # 3. 점수 판단
+        # 4. 점수 판단
         decision = verification_result.get("decision")
 
         if decision == "present_to_user":
@@ -235,9 +264,11 @@ def run_video_regeneration_with_verification(
         else:
             break
     
-    # 4. 최종 결과 반환
+    # 5. 최종 결과 반환
     return {
         **merge_result,
+        "opencv_passed": (opencv_result or {}).get("opencv_passed"),
+        "opencv_result": (opencv_result or {}).get("opencv_result"),
         "verification_score": verification_result.get("score"),
         "verification_decision": verification_result.get("decision"),
         "verification_message": verification_result.get("message"),

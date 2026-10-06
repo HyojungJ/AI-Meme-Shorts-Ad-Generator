@@ -3,6 +3,7 @@ from content_pipeline.image.graph import create_image_graph, get_image_graph, re
 from content_pipeline.image.nodes import (
     generate_character_image_node,
     generate_scene_image_node,
+    verify_image_opencv_node,
 )
 from content_pipeline.image.service import ImageNodeOutput, ImageService
 from content_pipeline.image.state import ImageState, get_initial_state
@@ -15,6 +16,7 @@ __all__ = [
     "create_image_graph",
     "generate_character_image_node",
     "generate_scene_image_node",
+    "verify_image_opencv_node",
     "get_image_graph",
     "get_initial_state",
     "load_image_config",

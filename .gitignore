@@ -6,6 +6,8 @@
 # --- 시크릿 / 자격증명 (절대 커밋 금지) ---
 .env
 *.env
+.env.*
+**/.env.local
 !.env.example
 *.pem
 *.key
@@ -58,6 +60,12 @@ yarn-error.log*
 *.mp3
 *.png.tmp
 
+# --- 서비스별 데이터 디렉터리 (수집/생성물, 대용량) ---
+# content-generator/data 는 추적 중인 학습 데이터라 제외 대상 아님
+ai/data/
+backend/data/
+data-pipeline/data/
+
 # --- DB / 로그 ---
 *.sqlite3
 *.db
@@ -76,3 +84,72 @@ Thumbs.db
 
 # --- 크롤링 원시 데이터 (대용량, temp 등) ---
 temp/dcinside/
+
+# ============================================================
+# 하위 폴더 .gitignore 통합 (아래 패턴들을 루트로 일원화)
+# ============================================================
+
+# --- 시크릿 / 자격증명 (하위에서 추가) ---
+secrets/
+credentials.json
+*.p12
+
+# --- Python 빌드/배포 산출물 (세부, 각 패키지 루트에 한정) ---
+# 주의: lib/ 등은 '/'로 앵커해 frontend/src/lib 같은 소스 디렉터리를 무시하지 않도록 함
+*.so
+.Python
+*.egg
+.eggs/
+.installed.cfg
+/develop-eggs/
+/downloads/
+/eggs/
+/sdist/
+/wheels/
+*/develop-eggs/
+*/downloads/
+*/eggs/
+*/sdist/
+*/wheels/
+*/lib64/
+*/parts/
+*/var/
+
+# --- 가상환경 (하위에서 추가) ---
+ENV/
+
+# --- IDE / 에디터 ---
+.vscode/
+*.swp
+*.swo
+*~
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- 테스트 / 커버리지 ---
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage/
+.jest/
+
+# --- 모델 파일 (추가 확장자) ---
+*.pth
+*.onnx
+*.pkl
+
+# --- 데이터 / 문서 산출물 (대용량) ---
+*.csv
+*.xlsx
+산출물/*.xlsx
+산출물/*.csv
+산출물/*.pdf
+docs/*.pdf
+
+# --- AI 파인튜닝 데이터 규칙 (ai/) ---
+ai/finetune/data/raw/
+ai/finetune/data/curated/
+ai/finetune/outputs/
+!ai/finetune/data/splits/

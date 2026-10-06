@@ -102,10 +102,14 @@ def run_image_regeneration_with_verification(
     - 점수가 낮으면 자동으로 재시도 (최대 2회)
     - 반환값에 retry_count 포함
     """
-    from content_pipeline.image.nodes import verify_image_modification_node
+    from content_pipeline.image.nodes import (
+        verify_image_modification_node,
+        verify_image_opencv_node,
+    )
     
     max_retries = 2
     verification_result = None
+    opencv_result = None
     
     for retry_count in range(max_retries + 1):
         # 1. 재생성
@@ -133,11 +137,22 @@ def run_image_regeneration_with_verification(
                 "retry_count": retry_count,
             }
         
-        # 2. 검증
         state.update(result)
         state["modification_request"] = modification_request
         state["original_image_url"] = original_image_url
-        
+
+        # 2. OpenCV 1차 검증 (모델 호출 전 결정적 품질 게이트)
+        opencv_result = verify_image_opencv_node(state)
+        if (
+            opencv_result.get("status") == "ok"
+            and not opencv_result.get("opencv_passed", True)
+            and opencv_result.get("decision") == "auto_retry"
+            and retry_count < max_retries
+        ):
+            # 명백히 깨진 산출물 → VLM 호출 생략하고 바로 재생성
+            continue
+
+        # 3. VLM 검증
         verification_result = verify_image_modification_node(state)
         
         if verification_result.get("status") == "failed":
@@ -148,7 +163,7 @@ def run_image_regeneration_with_verification(
                 "verification_error": verification_result.get("error"),
             }
         
-        # 3. 점수 판단
+        # 4. 점수 판단
         decision = verification_result.get("decision")
 
         if decision == "show_to_user":
@@ -160,9 +175,11 @@ def run_image_regeneration_with_verification(
         else:
             break
     
-    # 4. 최종 결과 반환
+    # 5. 최종 결과 반환
     return {
         **result,
+        "opencv_passed": (opencv_result or {}).get("opencv_passed"),
+        "opencv_result": (opencv_result or {}).get("opencv_result"),
         "verification_score": verification_result.get("score"),
         "verification_decision": verification_result.get("decision"),
         "verification_message": verification_result.get("message"),

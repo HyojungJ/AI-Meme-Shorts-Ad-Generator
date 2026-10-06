@@ -15,12 +15,61 @@ from content_pipeline.video.service import VideoService
 from content_pipeline.video.state import VideoState
 from content_pipeline.db import insert_final_video, save_verification_result, upsert_scene_video
 from content_pipeline.video.utils import build_scene_inputs_from_db
+from content_pipeline.validation import verify_video_opencv
 
 
 @lru_cache(maxsize=1)
 def _get_service() -> VideoService:
     config = load_video_config()
     return VideoService(config)
+
+
+def verify_video_opencv_node(state: VideoState) -> dict:
+    """
+    영상 OpenCV 1차 검증 노드 (모델 호출 없는 결정적 품질 게이트)
+    - 디코드/프레임수/길이/해상도/검은프레임/블러를 OpenCV로 점검
+    - 검증 대상: 병합된 영상 (merged_output_path 우선, 없으면 merged_video_url)
+    - 결과: opencv_passed(bool) + opencv_result. 실패 시 decision=auto_retry
+    - Gemini 검증 전에 돌려서 명백히 깨진 산출물에 비싼 모델 호출을 아낌
+    """
+    source = (state.get("merged_output_path") or state.get("merged_video_url") or "").strip()
+    retry_count = state.get("retry_count", 0)
+
+    if not source:
+        return {"status": "failed", "error": "merged_output_path or merged_video_url is required"}
+
+    try:
+        result = verify_video_opencv(source)
+    except Exception as exc:
+        # 검증기 자체 오류는 게이트를 막지 않고 통과시킨다(기존 Gemini 검증으로 넘김)
+        logger.warning("OpenCV video verification errored, skipping gate: %s", exc)
+        return {
+            "status": "ok",
+            "opencv_passed": True,
+            "opencv_result": {"passed": True, "issues": [], "metrics": {}, "skipped": True},
+        }
+
+    if result.passed:
+        decision = "present_to_user"
+        message = "OpenCV 기본 품질 검증 통과."
+    else:
+        if retry_count >= 3:
+            decision = "present_to_user"
+            message = "재생성 한도 초과. OpenCV 검증 이슈: " + "; ".join(result.issues)
+        else:
+            decision = "auto_retry"
+            message = "OpenCV 검증 실패로 자동 재생성합니다: " + "; ".join(result.issues)
+
+    return {
+        "status": "ok",
+        "opencv_passed": result.passed,
+        "opencv_result": result.to_dict(),
+        "opencv_decision": decision,
+        "opencv_message": message,
+        "decision": decision,
+        "message": message,
+        "retry_count": retry_count,
+    }
 
 
 def _build_scene_prompt(state: VideoState, scene_index: int) -> str:

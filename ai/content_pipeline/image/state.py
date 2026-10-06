@@ -31,6 +31,10 @@ class ImageState(TypedDict, total=False):
     original_image_url: str
     retry_count: int
 
+    # OpenCV 1차 검증 결과
+    opencv_passed: bool
+    opencv_result: dict
+
     status: Literal["ok", "failed"]
     error: str
 

@@ -17,11 +17,60 @@ from content_pipeline.db import (
     _maybe_presign_s3_url,
 )
 from content_pipeline.utils import parse_json_from_llm as _parse_json_from_llm
+from content_pipeline.validation import verify_image_opencv
 
 @lru_cache(maxsize=1)
 def _get_service() -> ImageService:
     config = load_image_config()
     return ImageService(config)
+
+
+def verify_image_opencv_node(state: ImageState) -> dict:
+    """
+    이미지 OpenCV 1차 검증 노드 (모델 호출 없는 결정적 품질 게이트)
+    - 디코드/해상도/종횡비/블러/노출/단색 여부를 OpenCV로 점검
+    - 검증 대상: 방금 생성된 이미지 (image_url 우선, 없으면 output_path)
+    - 결과: passed(bool) + issues/metrics. 실패 시 decision=auto_retry
+    - VLM 검증 전에 돌려서 명백히 깨진 산출물에 비싼 모델 호출을 아낌
+    """
+    source = (state.get("image_url") or state.get("output_path") or "").strip()
+    retry_count = state.get("retry_count", 0)
+
+    if not source:
+        return {"status": "failed", "error": "image_url or output_path is required"}
+
+    try:
+        result = verify_image_opencv(source)
+    except Exception as exc:
+        # 검증기 자체 오류는 게이트를 막지 않고 통과시킨다(기존 VLM 검증으로 넘김)
+        logger.warning("OpenCV image verification errored, skipping gate: %s", exc)
+        return {
+            "status": "ok",
+            "opencv_passed": True,
+            "opencv_result": {"passed": True, "issues": [], "metrics": {}, "skipped": True},
+        }
+
+    if result.passed:
+        decision = "show_to_user"
+        message = "OpenCV 기본 품질 검증 통과."
+    else:
+        if retry_count >= 2:
+            decision = "show_to_user"
+            message = "재생성 한도 초과. OpenCV 검증 이슈: " + "; ".join(result.issues)
+        else:
+            decision = "auto_retry"
+            message = "OpenCV 검증 실패로 자동 재생성합니다: " + "; ".join(result.issues)
+
+    return {
+        "status": "ok",
+        "opencv_passed": result.passed,
+        "opencv_result": result.to_dict(),
+        "opencv_decision": decision,
+        "opencv_message": message,
+        "decision": decision,
+        "message": message,
+        "retry_count": retry_count,
+    }
 
 
 def generate_character_image_node(state: ImageState) -> dict:
